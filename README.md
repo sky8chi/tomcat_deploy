@@ -1,4 +1,5 @@
 # tomcat_deploy
+## 依赖tomcat 自带的manager项目
 ## 依赖tomcat 生成pid
 ```
 vim bin/catalina.sh
