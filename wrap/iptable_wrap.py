@@ -33,6 +33,22 @@ class IptableWrap(object):
     def __run2(self):
         return self.tomcat2.check_run()
 
+    def __kill2(self):
+        if self.__run2():
+            log_util.info("[start] kill tom8180")
+            self.tomcat2.wait_for_deal_pre_resp()
+            self.tomcat2.force_kill_pre()
+        else:
+            log_util.warn("Previous tomcat is not run，didn`t need kill")
+
+    def __kill1(self):
+        if self.__run1():
+            log_util.info("[start] kill tom8080")
+            self.tomcat1.wait_for_deal_pre_resp()
+            self.tomcat1.force_kill_pre()
+        else:
+            log_util.warn("Previous tomcat is not run，didn`t need kill")
+
     def start_deploy(self, wars_with_md5, confs_with_md5):
         if IptableWrap.is_iptables_tom2():
             if self.__run1():
@@ -67,36 +83,24 @@ class IptableWrap(object):
             if not self.__run1():
                 return False, "current iptables is tom2, but tom1 is not running, cann't chg"
 
-            if self.__run2():
-                log_util.info("[start] kill tom8180")
-                self.tomcat2.wait_for_deal_pre_resp()
-                self.tomcat2.force_kill_pre()
-            else:
-                log_util.warn("Previous tomcat is not run，didn`t need kill")
-
             if self.tomcat1.check_md5(wars_with_md5, confs_with_md5):
                 log_util.info("[start] chg iptable for tom8080")
                 result = util.run_cmd("iptables -t nat -D PREROUTING -p tcp --dport 8080 -j REDIRECT --to-ports 8180")
                 if result["code"] > 0:
                     return False, result["info"][1]
+                self.__kill2()
             else:
                 return False, "check tom1's md5 fail, cann't chg"
         else:
             if not self.__run2():
                 return False, "current iptables is tom1, but tom2 is not running, cann't chg"
 
-            if self.__run1():
-                log_util.info("[start] kill tom8080")
-                self.tomcat1.wait_for_deal_pre_resp()
-                self.tomcat1.force_kill_pre()
-            else:
-                log_util.warn("Previous tomcat is not run，didn`t need kill")
-
             if self.tomcat2.check_md5(wars_with_md5, confs_with_md5):
                 log_util.info("[start] chg iptable for tom8180")
                 result = util.run_cmd("iptables -t nat -A PREROUTING -p tcp --dport 8080 -j REDIRECT --to-ports 8180")
                 if result["code"] > 0:
                     return False, result["info"][1]
+                self.__kill1()
             else:
                 return False, "check tom2's md5 fail, cann't chg"
 
