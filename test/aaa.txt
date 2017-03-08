@@ -1,0 +1,1 @@
+[1;32mMar 07 17:52:08 test_log.py[line:7] INFO =====[1;0m
